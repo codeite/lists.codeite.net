@@ -4,12 +4,15 @@ const conf = require('sp-conf')
 const endsWithSlash = /\/$/
 
 const myconfig = {
-  port: conf.readNumber('PORT', {defaultValue: 12006}),
+  port: conf.readNumber('PORT', {defaultValue: 12008}),
   database: {
     url: conf.readUrl('DB_URL', {validator: endsWithSlash}),
     user: conf.readString('DB_USER'),
     pass: conf.readPassword('DB_PASS')
-  }
+  },
+  secrets: {
+    lists: conf.readPassword('SECRETS_LISTS')
+  },
 }
 
 if (conf.missingEnvVars) {

@@ -5,10 +5,17 @@ const config = require('./config')
 const couchdb = require('./couchdb')
 
 const app = express()
+app.set('trust proxy', true)
 app.use(bodyParser.json())
+app.use(require('./codeite-auth')('lists', config.secrets.lists))
 
 app.use((req, res, next) => {
-  res.set('Access-Control-Allow-Origin', '*')
+  const origin = req.get('Origin')
+  if (origin && origin.endsWith('.aq')) {
+    res.set('Access-Control-Allow-Origin', origin)
+    res.set('Access-Control-Allow-Credentials', 'true')
+  }
+
   req.urlHost = req.protocol + '://' + req.get('host')
   next()
 })
@@ -17,14 +24,6 @@ app.get('/list/:userId', (req, res) => {
 
 })
 
-// app.get('/list/:userId/:appId', (req, res) => {
-//   get(`${req.params.userId}%2F${req.params.appId}%2F`, res, res)
-// })
-// app.get('/list/~/:appId/:listId?', (req, res) => {
-//   req.params.userId = 'sam'
-//   if (req.params.listId === undefined) req.params.listId = 'index'
-//   get(`${req.params.userId}%2F${req.params.appId}%2F${req.params.listId}`, res, res)
-// })
 function buildId(req) {
   return `${req.userId}%2F${req.params.appId}%2F${req.listId||'index'}`
 }
@@ -40,13 +39,14 @@ function buildEmptyDoc(req) {
 }
 
 app.param('userId', (req, res, next, id) => {
-  req.userId = (id === '~') ? 'sam' : id
+  req.userId = (id === '~') ? req.userId : id
   next()
 });
 
 app.get('/', (req, res) => {
   res.send({
-    users: req.urlHost + '/users'
+    users: req.urlHost + '/users',
+    currentUser: req.userId
   })
 })
 
