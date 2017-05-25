@@ -1,0 +1,41 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: node:6.10.3
+    working_directory: ~/lists.codeite.net
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Install Docker client
+          command: |
+            set -x
+            VER="17.03.0-ce"
+            curl -L -o /tmp/docker-$VER.tgz https://get.docker.com/builds/Linux/x86_64/docker-$VER.tgz
+            tar -xz -C /tmp -f /tmp/docker-$VER.tgz
+            mv /tmp/docker/* /usr/bin
+    #   - restore_cache:
+    #       keys:
+    #         - auth.codeite.net-{{ .Branch }}-{{ checksum "package.json" }}
+    #         - auth.codeite.net-{{ checksum "package.json" }}
+    #         - auth.codeite.net
+    #   - run:
+    #       name: Install Dependencies
+    #       command: npm install
+    #   - save_cache:
+    #       key: auth.codeite.net-{{ .Branch }}-{{ checksum "package.json" }}
+    #       paths:
+    #         - ~/auth.codeite.net/node_modules
+    #   - run:
+    #       name: NPM Test
+    #       command: npm test
+      - run:
+          name: Docker login
+          command: docker login docker.codeite.net -u $DOCKER_USER -p $DOCKER_PASS
+      - run:
+          name: Build docker image
+          command: .circleci/docker-build.sh
+      - run:
+          name: Push docker image
+          command: .circleci/docker-push.sh
