@@ -12,7 +12,7 @@ app.use(require('./codeite-auth')('lists', config.secrets.lists))
 
 app.use((req, res, next) => {
   const origin = req.get('Origin')
-  if (origin && origin.endsWith('.aq')) {
+  if (origin && (origin.endsWith('.aq') || origin.endsWith('codeite.net'))) {
     res.set('Access-Control-Allow-Origin', origin)
     res.set('Access-Control-Allow-Credentials', 'true')
     res.set('Access-Control-Allow-Methods', 'POST, GET, OPTIONS, PUT, DELETE, PATCH')
