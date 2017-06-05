@@ -1,0 +1,18 @@
+{
+  "_id": "_design/views",
+  "views": {
+    "users": {
+      "map": "function(doc) {\n  if (doc.owner) {\n    emit(doc.owner, 1);\n  }\n}",
+      "reduce": "_sum"
+    },
+    "apps": {
+      "reduce": "_sum",
+      "map": "function (doc) {\n  emit(doc.owner + '/' + doc.app, 1);\n}"
+    },
+    "lists": {
+      "reduce": "_sum",
+      "map": "function (doc) {\n  emit(doc._id, 1);\n}"
+    }
+  },
+  "language": "javascript"
+}

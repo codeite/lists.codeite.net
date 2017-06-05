@@ -29,12 +29,28 @@ module.exports = {
       return r.json()
     })
   },
+  update (id, updateDoc) {
+    const itemUri = `${couchDbUrl}/_design/updates/_update/partialUpdate/${id}`
+    const opts = auth({
+      method: 'PUT',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(updateDoc)
+    })
+
+    return fetch(itemUri, opts)
+    .then(r => {
+      // if (r.status === 404) return null
+      if (!r.ok) throw new Error(`Error PUTTING item ${itemUri} to CouchDB: ${r.status} ${r.statusText} : ` + JSON.stringify(opts))
+
+      return r.json()
+    })
+  },
   getDocumentById (id) {
     const itemUri = couchDbUrl + id
     // console.log('CouchDB get:', itemUri)
     return fetch(itemUri, auth())
       .then(r => {
-        // if (r.status === 404) return null
+        if (r.status === 404) return null
         if (!r.ok) throw new Error(`Error GETTING item ${itemUri} from CouchDB: ${r.status} ${r.statusText}`)
 
         return r.json()

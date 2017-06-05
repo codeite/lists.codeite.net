@@ -1,0 +1,7 @@
+{
+  "id": "_design/updates",
+  "updates": {
+    "partialUpdate": "function(doc, req) {\n  if (!doc) {\n    return [\n      null, JSON.stringify({\n        status: 'nodoc'\n      })\n    ];\n  }\n  _ref = JSON.parse(req.body);\n  for (k in _ref) {\n    v = _ref[k];\n    if (k[0] === '/') {\n      nestedDoc = doc;\n      nestedKeys = k.split('/');\n      _ref1 = nestedKeys.slice(1, -1);\n      for (_i = 0, _len = _ref1.length; _i < _len; _i++) {\n        nestedKey = _ref1[_i];\n        nestedDoc = ((_ref2 = nestedDoc[nestedKey]) != null ? _ref2 : nestedDoc[nestedKey] = {});\n      }\n      k = nestedKeys.slice(-1)[0];\n      if (v === '__delete__') {\n        delete nestedDoc[k];\n      } else {\n        nestedDoc[k] = v;\n      }\n      continue;\n    }\n    if (v === '__delete__') {\n      delete doc[k];\n    } else {\n      doc[k] = v;\n    }\n  }\n  return [\n    doc, JSON.stringify({\n      doc: doc,\n      status: 'updated'\n    })\n  ];\n}"
+  }
+}
+

@@ -5,7 +5,8 @@ const config = require('./config')
 const couchdb = require('./couchdb')
 
 const app = express()
-app.set('trust proxy', true)
+app.enable('trust proxy')
+app.enable('strict routing')
 app.use(bodyParser.json())
 app.use(require('./codeite-auth')('lists', config.secrets.lists))
 
@@ -14,11 +15,17 @@ app.use((req, res, next) => {
   if (origin && origin.endsWith('.aq')) {
     res.set('Access-Control-Allow-Origin', origin)
     res.set('Access-Control-Allow-Credentials', 'true')
+    res.set('Access-Control-Allow-Methods', 'POST, GET, OPTIONS, PUT, DELETE, PATCH')
+    res.set('Access-Control-Allow-Headers', 'content-type')
   }
+
+  console.log(req.method + ': ' + req.path)
 
   req.urlHost = req.protocol + '://' + req.get('host')
   next()
 })
+
+app.all('/setup', require('./setup'))
 
 app.get('/list/:userId', (req, res) => {
 
@@ -92,9 +99,9 @@ app.get('/lists/:userId/:appId', (req, res) => {
     })
 })
 
-app.get('/list/:userId/:appId/:listId?', (req, res) => {
+app.get('/list/:userId/:appId/?:listId?', (req, res) => {
   const id = buildId(req)
-  console.log('req.headers:', req.headers)
+  // console.log('req.headers:', req.headers)
 
   couchdb.getDocumentById(id)
     .then(document => {
@@ -121,13 +128,81 @@ app.put('/list/:userId/:appId/:listId?', (req, res) => {
 
   couchdb.getDocumentById(id)
     .then(document => {
+      if (rev && !document) {
+        return res.status(406).send('Document does not exist!')
+      }
+
       if (rev && rev !== document._rev) {
         return res.status(406).send('Wrong rev!')
+      }
+
+      if (!document) {
+        document = buildEmptyDoc(req)
       }
 
       document.items = req.body
       return couchdb.save(id, document)
     })
+    .then(doc => {
+      res.send(doc)
+    })
+    .catch(err => {
+      console.log('err:', err)
+      res.status(500).send(err)
+    })
+})
+
+app.get('/list/:userId/:appId/:listId/:listItemId', (req, res) => {
+  const id = buildId(req)
+  // console.log('req.headers:', req.headers)
+
+  couchdb.getDocumentById(id)
+    .then(document => {
+      if (req.accepts('application/json')) {
+        res.send(document.items[req.params.listItemId])
+      } else if (req.accepts('application/full+json')) {
+        res.status(409).send()
+      } else {
+        res.send(document.items[req.params.listItemId])
+      }
+
+    })
+    .catch(err => {
+      console.log('err:', err)
+      res.status(500).send(err)
+    })
+})
+
+app.patch('/list/:userId/:appId/:listId?/:listItemId', (req, res) => {
+  const id = buildId(req)
+
+  const update = {}
+  console.log('req.body:', req.body)
+
+  Object.keys(req.body).forEach(k => {
+    const val = (req.body[k] === null || req.body[k] === undefined) ? '__delete__' : req.body[k]
+    update[`/items/${req.params.listItemId}/${k}`] = val
+  })
+  console.log('update:', update)
+
+  couchdb.update(id, update)
+    .then(doc => {
+      res.send(doc)
+    })
+    .catch(err => {
+      console.log('err:', err)
+      res.status(500).send(err)
+    })
+})
+
+app.delete('/list/:userId/:appId/:listId?/:listItemId', (req, res) => {
+  const id = buildId(req)
+
+  const update = {
+    [`/items/${req.params.listItemId}`]: '__delete__'
+  }
+
+  couchdb.update(id, update)
     .then(doc => {
       res.send(doc)
     })
