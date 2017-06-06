@@ -10,7 +10,11 @@ app.enable('trust proxy')
 app.enable('strict routing')
 app.use(bodyParser.json())
 
-app.options('*', cors)
+app.options('*', (req, res, next) => {
+  cors(req, res, () =>{
+    res.send('')
+  })
+})
 
 app.use(require('./codeite-auth')('lists', config.secrets.lists))
 
