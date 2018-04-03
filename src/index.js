@@ -37,7 +37,7 @@ app.get('/list/:userId', (req, res) => {
 })
 
 function buildId(req) {
-  return `${req.userId}%2F${req.params.appId}%2F${req.listId||'index'}`
+  return `${req.userId}.${req.params.appId}.${req.listId||'index'}`
 }
 
 function buildEmptyDoc(req) {
