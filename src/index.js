@@ -3,20 +3,11 @@ const bodyParser = require('body-parser')
 
 const config = require('./config')
 const couchdb = require('./couchdb')
-const cors = require('./cors')
 
 const app = express()
 app.enable('trust proxy')
 app.enable('strict routing')
 app.use(bodyParser.json())
-
-app.options('*', (req, res, next) => {
-  cors(req, res, () =>{
-    res.send('')
-  })
-})
-
-app.use(require('./codeite-auth')('lists', config.secrets.lists))
 
 app.use((req, res, next) => {
   const origin = req.get('Origin')
@@ -32,6 +23,12 @@ app.use((req, res, next) => {
   req.urlHost = req.protocol + '://' + req.get('host')
   next()
 })
+
+app.options('*', (req, res, next) => {
+  res.send('')
+})
+
+app.use(require('./codeite-auth')('lists', config.secrets.lists))
 
 app.all('/setup', require('./setup'))
 
