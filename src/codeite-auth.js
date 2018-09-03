@@ -42,9 +42,21 @@ module.exports = (name, secret) => (req, res, next) => {
       return reject('invalid_version')
     }
 
-    const validFrom = moment().add(-30, 'days')
+    let creationDate, validFrom
+    if (created.includes('P')) {
+      const [date, duration] = created.split('P')
+      creationDate = moment(date)
+      const dur = moment.duration('P'+duration)
+      validFrom = moment().subtract(dur)
+
+    } else {
+      creationDate = moment(created)
+      validFrom = moment().subtract(30, 'days')
+    }
+
     const validTo = moment()
-    if (!moment(created).isBetween(validFrom, validTo)) {
+
+    if (!creationDate.isBetween(validFrom, validTo)) {
       return reject('expired_token')
     }
 
