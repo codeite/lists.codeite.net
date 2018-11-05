@@ -16,6 +16,10 @@ app.use((req, res, next) => {
     res.set('Access-Control-Allow-Credentials', 'true')
     res.set('Access-Control-Allow-Methods', 'POST, GET, OPTIONS, PUT, DELETE, PATCH')
     res.set('Access-Control-Allow-Headers', 'content-type')
+  } else {
+    if (origin) {
+      console.log('Request from origin:', origin)
+    }
   }
 
   console.log(req.method + ': ' + req.path)
