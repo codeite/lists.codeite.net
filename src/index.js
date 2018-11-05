@@ -11,15 +11,13 @@ app.use(bodyParser.json())
 
 app.use((req, res, next) => {
   const origin = req.get('Origin')
+  console.log('Request from origin:', origin)
   if (origin && (origin.endsWith('.aq') || origin.endsWith('codeite.net') || origin.endsWith('codeite.net:3000'))) {
     res.set('Access-Control-Allow-Origin', origin)
     res.set('Access-Control-Allow-Credentials', 'true')
     res.set('Access-Control-Allow-Methods', 'POST, GET, OPTIONS, PUT, DELETE, PATCH')
     res.set('Access-Control-Allow-Headers', 'content-type')
   } else {
-    if (origin) {
-      console.log('Request from origin:', origin)
-    }
 
     res.set('Access-Control-Allow-Origin', 'http://localhost.codeite.net:3000')
     res.set('Access-Control-Allow-Credentials', 'true')
